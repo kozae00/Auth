@@ -12,7 +12,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Setter
 @Builder
 public class Comment extends BaseTime {
 
@@ -23,5 +22,9 @@ public class Comment extends BaseTime {
     private Post post;
 
     private String content;
+
+    public void modify(String content) {
+        this.content = content;
+    }
 
 }

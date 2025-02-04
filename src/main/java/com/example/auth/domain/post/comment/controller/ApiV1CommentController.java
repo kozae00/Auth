@@ -8,7 +8,6 @@ import com.example.auth.domain.post.post.service.PostService;
 import com.example.auth.global.Rq;
 import com.example.auth.global.dto.RsData;
 import com.example.auth.global.exception.ServiceException;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +22,6 @@ public class ApiV1CommentController {
 
     private final PostService postService;
     private final Rq rq;
-    private final EntityManager em;
 
     @GetMapping
     public List<CommentDto> getItems(@PathVariable long postId) {
@@ -60,6 +58,26 @@ public class ApiV1CommentController {
         return new RsData<>(
                 "201-1",
                 "%d번 댓글 작성이 완료되었습니다.".formatted(comment.getId())
+        );
+    }
+
+    record ModifyReqBody(String content) {}
+
+    @PutMapping("{id}")
+    @Transactional
+    public RsData<Void> modify(@PathVariable long postId, @PathVariable long id, @RequestBody ModifyReqBody reqBody) {
+        Member actor = rq.getAuthenticatedActor();
+        Post post = postService.getItem(postId).orElseThrow(
+                () -> new ServiceException("404-1", "존재하지 않는 게시글입니다.")
+        );
+        Comment comment = post.getCommentById(id);
+        if(comment.getAuthor().getId() != actor.getId()) {
+            throw new ServiceException("403-1", "자신이 작성한 댓글만 수정 가능합니다.");
+        }
+        comment.modify(reqBody.content());
+        return new RsData<>(
+                "200-1",
+                "%d번 댓글 수정이 완료되었습니다.".formatted(id)
         );
     }
 
