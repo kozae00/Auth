@@ -55,8 +55,7 @@ public class ApiV1CommentController {
         Member actor = rq.getAuthenticatedActor();
         Comment comment = _write(postId, actor, reqBody.cotnent());
 
-        // db 반영만 할 수 있으면
-        em.flush(); //commit
+        postService.flush();
 
         return new RsData<>(
                 "201-1",
