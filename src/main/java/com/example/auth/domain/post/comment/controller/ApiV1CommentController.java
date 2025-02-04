@@ -8,9 +8,8 @@ import com.example.auth.domain.post.post.service.PostService;
 import com.example.auth.global.Rq;
 import com.example.auth.global.dto.RsData;
 import com.example.auth.global.exception.ServiceException;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,12 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApiV1CommentController {
 
-    @Autowired
-    @Lazy
-    private final  ApiV1CommentController self;
-
     private final PostService postService;
     private final Rq rq;
+    private final EntityManager em;
 
     @GetMapping
     public List<CommentDto> getItems(@PathVariable long postId) {
@@ -57,7 +53,10 @@ public class ApiV1CommentController {
     @Transactional
     public RsData<Void> write(@PathVariable long postId, @RequestBody WriteReqBody reqBody) {
         Member actor = rq.getAuthenticatedActor();
-        Comment comment = self._write(postId, actor, reqBody.cotnent());
+        Comment comment = _write(postId, actor, reqBody.cotnent());
+
+        // db 반영만 할 수 있으면
+        em.flush(); //commit
 
         return new RsData<>(
                 "201-1",
@@ -65,7 +64,6 @@ public class ApiV1CommentController {
         );
     }
 
-    @Transactional
     public Comment _write(long postId, Member actor, String content) {
         Post post = postService.getItem(postId).orElseThrow(
                 () -> new ServiceException("404-1", "존재하지 않는 게시글입니다.")
