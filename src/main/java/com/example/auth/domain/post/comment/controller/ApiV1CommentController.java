@@ -95,9 +95,8 @@ public class ApiV1CommentController {
                 () -> new ServiceException("404-1", "존재하지 않는 게시글입니다.")
         );
         Comment comment = post.getCommentById(id);
-        if(!actor.isAdmin() && comment.getAuthor().getId() != actor.getId()) {
-            throw new ServiceException("403-1", "자신이 작성한 댓글만 삭제 가능합니다.");
-        }
+
+        comment.canDelete(actor);
         post.deleteComment(comment);
         return new RsData<>(
                 "200-1",
